@@ -1,24 +1,3 @@
-<!---
-
-This file is used to generate your project datasheet. Please fill in the information below and delete any unused
-sections.
-
-You can also include images in this folder and reference them in the markdown. Each image must be less than
-512 kb in size, and the combined size of all images must be less than 1 MB.
--->
-
-## How it works
-
-Lorem ipsum dolor sit amet.
-
-## How to test
-
-**WORK IN PROGRESS**
-
-This can be tested with MicroPython on the demo board.
-
-First, set up some utility functions:
-```python
 CMD_WRITE_KEY_128 = 0x10
 CMD_WRITE_BLOCK_64 = 0x20
 CMD_START_ENCRYPT = 0x30
@@ -26,6 +5,7 @@ CMD_START_DECRYPT = 0x31
 CMD_READ_BLOCK_64 = 0x40
 CMD_READ_STATUS = 0x50
 
+# Set up utility functions for SPI communication
 def spi_write_cmd_and_payload(spi, cmd, payload=None):
     spi_cs(0)
     spi.write(bytes([cmd]))
@@ -71,10 +51,8 @@ def decrypt(spi, ciphertext, key):
     if not status:
         return b''
     return spi_read_block64(spi)
-```
 
-Secondly, initialize SPI:
-```python
+# Initialize SPI
 spi_miso = tt.pins.pin_uo_out0
 spi_cs = tt.pins.pin_ui_in2
 spi_clk = tt.pins.pin_ui_in0
@@ -88,9 +66,8 @@ spi_mosi.init(spi_mosi.OUT)
 spi = machine.SoftSPI(baudrate=10000, polarity=0, phase=0, bits=8, firstbit=machine.SPI.MSB, sck=spi_clk, mosi=spi_mosi, miso=spi_miso)
 
 spi_cs(1) # Initial value for CS
-```
-Then test encryption and decryption:
-```python
+
+# Test encryption and decryption
 key = bytes.fromhex("1b1a1918131211100b0a090803020100")
 plain = bytes.fromhex("656b696c20646e75")
 expected_ct = bytes.fromhex("44c8fc20b9dfa07a")
@@ -102,10 +79,3 @@ assert ct == expected_ct, "Encryption failed"
 pt = decrypt(spi, ct, key)
 print("Decrypted plaintext:", pt.hex())
 assert pt == plain, "Decryption failed"
-```
-
-## External hardware
-
-No external hardware is required.
-
-The SIMON64/128 crypto module can be used through the RP2350 on the demo board, or optionally by connecting an external microcontroller to the SPI pins.
