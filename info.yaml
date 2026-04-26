@@ -25,9 +25,9 @@ project:
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
   # Inputs
-  ui[0]: "SPI_SCK"
-  ui[1]: "SPI_MOSI"
-  ui[2]: "SPI_CS_N"
+  ui[0]: "SPI SCK"
+  ui[1]: "SPI MOSI"
+  ui[2]: "SPI CS_N"
   ui[3]: ""
   ui[4]: ""
   ui[5]: ""
@@ -35,10 +35,10 @@ pinout:
   ui[7]: ""
 
   # Outputs
-  uo[0]: "SPI_MISO"
-  uo[1]: "BUSY"
-  uo[2]: "DONE_STICKY"
-  uo[3]: "OUT_VALID"
+  uo[0]: "SPI MISO"
+  uo[1]: "Busy"
+  uo[2]: "Out valid"
+  uo[3]: ""
   uo[4]: ""
   uo[5]: ""
   uo[6]: ""
