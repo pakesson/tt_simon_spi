@@ -72,6 +72,8 @@
   "//": "Only export pin area in LEF (without any connected nets)",
   "MAGIC_WRITE_LEF_PINONLY": 1,
 
+  "VERILOG_DEFINES": ["USE_ART"],
+
   "MACROS": {
     "chip_art": {
       "instances": {
