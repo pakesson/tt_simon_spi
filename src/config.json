@@ -70,5 +70,30 @@
   "MAGIC_DEF_LABELS": 0,
 
   "//": "Only export pin area in LEF (without any connected nets)",
-  "MAGIC_WRITE_LEF_PINONLY": 1
+  "MAGIC_WRITE_LEF_PINONLY": 1,
+
+  "MACROS": {
+    "chip_art": {
+      "instances": {
+        "chip_art_instance": {
+          "location": [67, 100],
+          "orientation": "N"
+        }
+      },
+      "gds": ["dir::../art/chip_art.gds"],
+      "lef": ["dir::../art/chip_art.lef"]
+    }
+  },
+
+  "//": "Reducing padding around logo macros",
+  "FP_MACRO_HORIZONTAL_HALO": 2,
+  "FP_MACRO_VERTICAL_HALO": 2,
+
+  "IGNORE_DISCONNECTED_MODULES": [
+    "chip_art_instance", "chip_art"
+  ],
+
+  "MAGIC_EXT_ABSTRACT_CELLS": [
+    "chip_art_instance", "chip_art"
+  ]
 }

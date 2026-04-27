@@ -197,4 +197,7 @@ module tt_um_pakesson_simon64_128 (
 
   wire _unused = &{ena, uio_in, 1'b0};
 
+  (* keep *)
+  chip_art chip_art_instance();
+
 endmodule
