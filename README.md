@@ -6,4 +6,6 @@
 
 See the design in 3D in the [interactive GDS viewer](https://pakesson.github.io/tt_simon_spi).
 
+[![GDS render](docs/gds_3d_viewer.png)](https://pakesson.github.io/tt_simon_spi)
+
 [![GDS render](https://pakesson.github.io/tt_simon_spi/gds_render.png)](https://pakesson.github.io/tt_simon_spi)
