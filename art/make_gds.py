@@ -5,9 +5,9 @@ import gdspy
 import sys
 from PIL import Image
 
-PNG_NAME = "oresund_bridge.png"
-CELL_NAME = "oresund_bridge"
-GDS_NAME = "oresund_bridge.gds"
+PNG_NAME = "chip_art.png"
+CELL_NAME = "chip_art"
+GDS_NAME = "chip_art.gds"
 
 BOUNDARY_LAYERS = [
     (235, 4), # prBndry, boundary
@@ -25,6 +25,39 @@ PIXEL_LAYERS = [
 ]
 PIXEL_SIZE = 0.28 # um
 VERBOSITY = 1
+MET1_ONLY_MAX = 200
+BOTH_LAYERS_MAX = 100
+
+
+def run_drc(bitmap, layer_name):
+    diagonals = 0
+    lone_pixels = 0
+    drc_errors = 0
+
+    for y in range(1, len(bitmap)):
+        for x in range(1, len(bitmap[y])):
+            if (bitmap[y - 1][x - 1] == bitmap[y][x] and
+                bitmap[y - 1][x] == bitmap[y][x - 1] and
+                bitmap[y - 1][x] != bitmap[y][x]):
+                if VERBOSITY > 1:
+                    print('[DRC:%s] Diagonally touching pixels at %d,%d' % (layer_name, x, y))
+                diagonals += 1
+                drc_errors += 1
+
+    for y in range(len(bitmap)):
+        for x in range(len(bitmap[y])):
+            if (bitmap[y][x] != (y > 0 and bitmap[y - 1][x]) and
+                bitmap[y][x] != (y + 1 < len(bitmap) and bitmap[y + 1][x]) and
+                bitmap[y][x] != (x > 0 and bitmap[y][x - 1]) and
+                bitmap[y][x] != (x + 1 < len(bitmap[y]) and bitmap[y][x + 1])):
+                if VERBOSITY > 1:
+                    print('[DRC:%s] Lone pixel at %d,%d' % (layer_name, x, y))
+                lone_pixels += 1
+                drc_errors += 1
+
+    if drc_errors:
+        print('Warning: %d DRC issues encountered on %s (%d diagonals, %d lone pixels)' %
+              (drc_errors, layer_name, diagonals, lone_pixels))
 
 # Process arguments
 args = sys.argv[1:]
@@ -54,35 +87,21 @@ if VERBOSITY > 0:
 # Convert the image to grayscale
 img = img.convert("L")
 
-bitmap = [[img.getpixel((x, y)) < 128
-           for x in range(img.width)]
-          for y in range(img.height)]
+pixel_values = [[img.getpixel((x, y))
+                 for x in range(img.width)]
+                for y in range(img.height)]
 
-diagonals = 0
-lone_pixels = 0
-drc_errors = 0
-for y in range(1, img.height):
-    for x in range(1, img.width):
-        if (bitmap[y - 1][x - 1] == bitmap[y][x] and
-            bitmap[y - 1][x] == bitmap[y][x - 1] and
-            bitmap[y - 1][x] != bitmap[y][x]):
-            if VERBOSITY > 1:
-                print('[DRC] Diagonally touching pixels at %d,%d' % (x, y))
-            diagonals += 1
-            drc_errors += 1
-for y in range(img.height):
-    for x in range(img.width):
-        if (bitmap[y][x] != (y > 0 and bitmap[y - 1][x]) and
-            bitmap[y][x] != (y + 1 < img.height and bitmap[y + 1][x]) and
-            bitmap[y][x] != (x > 0 and bitmap[y][x - 1]) and
-            bitmap[y][x] != (x + 1 < img.width and bitmap[y][x + 1])):
-            if VERBOSITY > 1:
-                print('[DRC] Lone pixel at %d,%d' % (x, y))
-            lone_pixels += 1
-            drc_errors += 1
-if drc_errors:
-    print('Warning: %d DRC issues encountered (%d diagonals, %d lone pixels)' %
-          (drc_errors, diagonals, lone_pixels))
+layer_bitmaps = [
+    [[pixel_values[y][x] < MET1_ONLY_MAX
+      for x in range(img.width)]
+     for y in range(img.height)],
+    [[pixel_values[y][x] < BOTH_LAYERS_MAX
+      for x in range(img.width)]
+     for y in range(img.height)],
+]
+
+for layer_name, bitmap in enumerate(layer_bitmaps):
+    run_drc(bitmap, layer_name)
 
 layout = gdspy.Cell(CELL_NAME)
 size = (img.width * PIXEL_SIZE, img.height * PIXEL_SIZE)
@@ -93,7 +112,7 @@ for layer, datatype in BOUNDARY_LAYERS:
     layout.add(
         gdspy.Rectangle((0, 0), size,
                         layer=layer, datatype=datatype))
-for layer, datatype in PIXEL_LAYERS:
+for (layer, datatype), bitmap in zip(PIXEL_LAYERS, layer_bitmaps):
     for y in range(img.height):
         for x in range(img.width):
             if bitmap[y][x]:
