@@ -1536,8 +1536,6 @@ MACRO chip_art
         RECT 0.000 0.000 26.880 26.880 ;
       LAYER met4 ;
         RECT 0.000 0.000 26.880 26.880 ;
-      LAYER met5 ;
-        RECT 0.000 0.000 26.880 26.880 ;
   END
 END chip_art
 END LIBRARY

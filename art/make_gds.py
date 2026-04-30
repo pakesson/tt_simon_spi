@@ -15,7 +15,7 @@ BOUNDARY_LAYERS = [
     (105, 52), # cmm2, waffle-drop
     (107, 24), # cmm3, waffle-drop
     (112, 4),  # cmm4, waffle-drop
-    (117, 4),  # cmm5, waffle-drop
+    #(117, 4),  # cmm5, waffle-drop
 ]
 PIXEL_LAYERS = [
     (68, 20),  # met1, drawing
