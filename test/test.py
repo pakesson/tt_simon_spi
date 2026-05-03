@@ -34,6 +34,7 @@ def _top_sources(tb_file: str):
 def _rtl_sources(*src_names: str, tb_file: str):
     return [*(SRC_DIR / name for name in src_names), TEST_DIR / tb_file]
 
+
 def _run(tb_name: str, test_module: str, sources):
     runner = get_runner(SIM)
     defines = {}
@@ -43,7 +44,7 @@ def _run(tb_name: str, test_module: str, sources):
             "FUNCTIONAL": True,
             "USE_POWER_PINS": True,
             "SIM": True,
-            #"UNIT_DELAY": "#1",
+            # "UNIT_DELAY": "#1",
         }
 
     runner.build(
@@ -59,9 +60,27 @@ def _run(tb_name: str, test_module: str, sources):
         waves=WAVES,
     )
 
+
 def test_tt_um_pakesson_simon64_128():
     _run(
         "tb",
         "test_tt_um_pakesson_simon64_128",
+        _top_sources("tb_tt_um_pakesson_simon64_128.v"),
+    )
+
+
+def test_simon_reference():
+    _run(
+        "tb",
+        "test_simon_reference",
+        _top_sources("tb_tt_um_pakesson_simon64_128.v"),
+    )
+
+
+@pytest.mark.skipif(GL_TEST, reason="Gate-level run only tests top-level module")
+def test_tt_um_pakesson_simon64_128_internal():
+    _run(
+        "tb",
+        "test_tt_um_pakesson_simon64_128_internal",
         _top_sources("tb_tt_um_pakesson_simon64_128.v"),
     )
