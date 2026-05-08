@@ -94,7 +94,7 @@ async def wait_spi_done(dut, polls=4096):
 
 @cocotb.test()
 async def test_reference_implementation(dut):
-    key = bytes.fromhex("1f1e1d1c1b1a19181716151413121110")
+    key = bytes.fromhex("1b1a1918131211100b0a090803020100")
     pt = bytes.fromhex("656b696c20646e75")
     ct = simon_encrypt_ref(key, pt)
 
@@ -282,7 +282,7 @@ async def test_spi_start_decrypt_end_to_end(dut):
     await ClockCycles(dut.clk, 10)
     await _spi_idle(dut)
 
-    key = bytes.fromhex("1f1e1d1c1b1a19181716151413121110")
+    key = bytes.fromhex("1b1a1918131211100b0a090803020100")
     plain = bytes.fromhex("656b696c20646e75")
     cipher = simon_encrypt_ref(key, plain)
 
@@ -400,7 +400,7 @@ async def test_spi_back_to_back_decrypt_frames(dut):
     await ClockCycles(dut.clk, 10)
     await _spi_idle(dut)
 
-    key = bytes.fromhex("1f1e1d1c1b1a19181716151413121110")
+    key = bytes.fromhex("1b1a1918131211100b0a090803020100")
     p0 = bytes.fromhex("656b696c20646e75")
     p1 = bytes.fromhex("1122334455667788")
     c0 = simon_encrypt_ref(key, p0)
