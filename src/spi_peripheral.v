@@ -59,10 +59,12 @@ module spi_peripheral (
       end
 
       if (cs_active && sck_rise) begin
+        // Sample MOSI on SCK rising edge.
         rx_shift <= {rx_shift[6:0], mosi_stable};
         if (bit_cnt == 3'd7) begin
           bit_cnt <= 3'd0;
           if (!got_cmd) begin
+            // First byte after CS low is the command.
             cmd_valid <= 1'b1;
             got_cmd   <= 1'b1;
           end else begin
@@ -74,6 +76,7 @@ module spi_peripheral (
       end
 
       if (cs_active && sck_fall) begin
+        // Shift MISO on SCK falling edge.
         spi_miso <= tx_shift[7];
         tx_shift <= {tx_shift[6:0], 1'b0};
       end

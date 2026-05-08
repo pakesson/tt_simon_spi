@@ -71,6 +71,7 @@ module tt_um_pakesson_simon64_128 (
       .rst_n(rst_n_int),
       .start(core_start_pipe),
       .decrypt(core_decrypt_pipe),
+      // Skip the first byte (the command) when loading key or block data
       .key_byte_valid(spi_rx_byte_valid && (payload_mode == PL_KEY) && (byte_cnt != 5'd0)),
       .key_byte(spi_rx_shift),
       .block_byte_valid(spi_rx_byte_valid && (payload_mode == PL_BLOCK) && (byte_cnt != 5'd0)),
