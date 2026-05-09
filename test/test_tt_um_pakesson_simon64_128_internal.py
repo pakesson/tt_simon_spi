@@ -66,7 +66,7 @@ async def wait_done(dut, timeout=1000000):
 
 
 async def run_core_encrypt_smoke(dut):
-    key = bytes.fromhex("1f1e1d1c1b1a19181716151413121110")
+    key = bytes.fromhex("1b1a1918131211100b0a090803020100")
     plain = bytes.fromhex("656b696c20646e75")
     dut.user_project.core_decrypt_pipe.value = 0
     dut.user_project.core.k_window.value = int.from_bytes(key, "big")
@@ -109,7 +109,7 @@ async def test_spi_write_paths_and_core_smoke(dut):
     await ClockCycles(dut.clk, 10)
     await _spi_idle(dut)
 
-    key = bytes.fromhex("1f1e1d1c1b1a19181716151413121110")
+    key = bytes.fromhex("1b1a1918131211100b0a090803020100")
     plain = bytes.fromhex("656b696c20646e75")
 
     await spi_write_cmd_and_payload(dut, CMD_WRITE_KEY_128, key)
