@@ -7,15 +7,31 @@ You can also include images in this folder and reference them in the markdown. E
 512 kb in size, and the combined size of all images must be less than 1 MB.
 -->
 
-## How it works
+## Introduction
 
-Lorem ipsum dolor sit amet.
+This is a Tiny Tapeout ASIC project implementing the SIMON64/128 lightweight block cipher with an SPI interface.
 
-## How to test
+This project has not been hardened against side-channels or other cryptographic attacks. That could potentially be an interesting follow-up project.
+
+The ASIC implementation also includes some art of a secure chip, on metal layers 1 and 2, as can be seen in this 3D render:
+
+![GDS render](gds_3d_viewer.png)
+
+## How It Works
+
+TODO: The cryptographic implementation matches the behavior of the [simonspeckciphers](https://pypi.org/project/simonspeckciphers/) Python library, which is also verified as part of the automated tests.
+
+## Hardware Interface
+
+The SIMON64/128 crypto module can be used through the RP2350 microcontroller on the demo board, or optionally by connecting an external microcontroller to the SPI pins.
+
+## How to Test
 
 **WORK IN PROGRESS**
 
-This can be tested with MicroPython on the demo board.
+### Using with MicroPython on the TT Demo Board
+
+The Tiny Tapeout demo board includes an RP2350 running MicroPython, which can be used to test this project.
 
 First, set up some utility functions:
 ```python
@@ -104,8 +120,13 @@ print("Decrypted plaintext:", pt.hex())
 assert pt == plain, "Decryption failed"
 ```
 
-## External hardware
+## References
 
-No external hardware is required.
+A bitserial implementation of SIMON128 has previously been taped out on [Tiny Tapeout 8](https://tinytapeout.com/chips/tt08/tt_um_simon_cipher) and [IHP 25a](https://tinytapeout.com/chips/ttihp25a/tt_um_simon_cipher), by [Secure-Embedded-Systems](https://github.com/Secure-Embedded-Systems/tt08-simon). That implementation has a fixed hardcoded (all zero) key and uses a custom 3-bit input and 2-bit output interface, but it also fits in only one Tiny Tapeout tile (instead of two, like this project).
 
-The SIMON64/128 crypto module can be used through the RP2350 on the demo board, or optionally by connecting an external microcontroller to the SPI pins.
+The [simonspeckciphers](https://pypi.org/project/simonspeckciphers/) Python library was used as a reference, and is also included in the cocotb tests for this project.
+
+The following papers were also used as references:
+- [The SIMON and SPECK Families of Lightweight Block Ciphers](https://eprint.iacr.org/2013/404)
+- [SIMON Says, Break the Area Records for Symmetric Key Block Ciphers on FPGAs](https://eprint.iacr.org/2014/237)
+- [Simple SIMON: FPGA implementations of the SIMON 64/128 Block Cipher](https://eprint.iacr.org/2016/029)
