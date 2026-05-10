@@ -80,6 +80,9 @@ module simon64_128_core (
       ctr_bit    <= 5'd0;
       op_decrypt <= 1'b0;
       z_lfsr     <= 7'h5b;   // initial state for z_idx=0
+      k_window  <= 128'h0;
+      x_reg     <= 32'h0;
+      y_reg     <= 32'h0;
     end else begin
       done <= 1'b0;
 
