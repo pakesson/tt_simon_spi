@@ -77,15 +77,13 @@ Notes:
 
 ## How It Works
 
-TODO: The cryptographic implementation matches the behavior of the [simonspeckciphers](https://pypi.org/project/simonspeckciphers/) Python library, which is also verified as part of the automated tests.
+The cryptographic implementation matches the behavior of the [simonspeckciphers](https://pypi.org/project/simonspeckciphers/) Python library, which is also verified as part of the automated tests.
 
 Both encryption and decryption take 1410 clock cycles to complete without warmup, or 1453 clock cycles with warmup.
 
 ## How to Test
 
 Automated tests using [cocotb](https://www.cocotb.org/) and [pytest](https://docs.pytest.org/en/stable/) can be found under `test/`.
-
-**WORK IN PROGRESS**
 
 The easiest way to use this project is by through MicroPython on the Tiny Tapeout demo board.
 
@@ -197,6 +195,7 @@ All examples have been tested with the [Tigard](https://github.com/tigard-tools/
 
 ![Photo showing the FPGA demo board connected to the Tigard FT2232H breakout board](fpga_tigard_photo.png)
 
+Running the script without parameters prints usage information:
 ```sh
 $ uv run pyftdi_example.py
 usage: pyftdi_example.py [-h] [--list-devices] [--device DEVICE] [--encrypt | --decrypt] [--key KEY] [--data DATA]
