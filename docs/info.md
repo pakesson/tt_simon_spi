@@ -215,7 +215,7 @@ Example code using the [PyFtdi](https://eblot.github.io/pyftdi/) Python library 
 
 All examples have been tested with the [Tigard](https://github.com/tigard-tools/tigard) FT2232H breakout board:
 
-![Photo showing the FPGA demo board connected to the Tigard FT2232H breakout board](fpga_tigard_photo.png)
+![Photo showing the FPGA demo board connected to the Tigard FT2232H breakout board](fpga_tigard_photo.jpg)
 
 Running the script without parameters prints usage information:
 ```sh
