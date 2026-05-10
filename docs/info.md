@@ -29,6 +29,8 @@ The SIMON64/128 crypto module can be used through the RP2350 microcontroller on 
 
 **WORK IN PROGRESS**
 
+![Photo showing the FPGA demo board connected to the Tigard FT2232H breakout board](fpga_tigard_photo.png)
+
 ### Using with MicroPython on the TT Demo Board
 
 The Tiny Tapeout demo board includes an RP2350 running MicroPython, which can be used to test this project.
