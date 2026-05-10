@@ -2,6 +2,8 @@
 
 # SIMON64/128
 
+This is a Tiny Tapeout ASIC project implementing the SIMON64/128 lightweight block cipher with an SPI interface.
+
 - [Read the documentation for project](docs/info.md)
 
 See the design in 3D in the [interactive GDS viewer](https://pakesson.github.io/tt_simon_spi).
