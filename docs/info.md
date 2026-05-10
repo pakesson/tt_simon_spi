@@ -11,9 +11,12 @@ You can also include images in this folder and reference them in the markdown. E
 
 This is a Tiny Tapeout ASIC project implementing the SIMON64/128 lightweight block cipher with an SPI interface.
 
+SIMON is a family of lightweight block ciphers published by the NSA in 2013, designed for efficient hardware implementation. Its sister family, SPECK, similarly targets software efficiency.
+This project implements SIMON64/128, which is a variant of SIMON using 64-bit blocks and 128-bit keys.
+
 This project has not been hardened against side-channels or other cryptographic attacks. That could potentially be an interesting follow-up project.
 
-The ASIC implementation also includes some art of a secure chip, on metal layers 1 and 2, as can be seen in this 3D render:
+The ASIC implementation also includes an image illustrating a secure chip, on metal layers 1 and 2, as can be seen in this 3D render:
 
 ![GDS render](gds_3d_viewer.png)
 
@@ -31,7 +34,7 @@ The SIMON64/128 crypto module can be used through the RP2350 microcontroller on 
 SPI mode 0 is used, with clock polarity 0 and clock phase 0. Data is sampled (from MOSI) on rising clock edges, and shifted out (on MISO) on falling clock edges.
 Chip select is active low.
 
-An SPI clock frequency of up to 6 MHz seems to work fine when testing on an FPGA. Results may vary on the actual ASIC.
+An SPI clock frequency of up to 6 MHz seems to work fine, with a 50 MHz system clock, when testing on an FPGA. Results may vary on the actual ASIC.
 
 ## SPI Protocol
 
@@ -77,9 +80,28 @@ Notes:
 
 ## How It Works
 
-The cryptographic implementation matches the behavior of the [simonspeckciphers](https://pypi.org/project/simonspeckciphers/) Python library, which is also verified as part of the automated tests.
+SIMON supports multiple variants and parameter sets based on word size (n), which determines the overall block size (2n). The key size is a multiple of n by m=2, 3 or 4.
+
+SIMON64/128 uses 32-bit words (n=32), 64-bit blocks (2n=64), and a 128-bit key (m=4) with 44 rounds.
+
+SIMON is a balanced Feistel cipher, meaning (for SIMON64/128) the 64-bit block is split into two 32-bit halves, and each round updates one half using a nonlinear function of the other half plus a round key.
+The round function consists of bitwise operations and rotations (no S-boxes), which is helpful when implementing in limited area in hardware.
+
+The project consists of three main Verilog modules: an SPI peripheral that handles communication with an external microcontroller, a SIMON64/128 cryptographic core that performs encryption and decryption, and a top-level wrapper that integrates them.
+
+The full key and block are loaded as bytes over SPI and stored in a 128-bit key window register (`k_window`) and 64-bit block state (split into `x_reg` and `y_reg`), but round processing itself is performed bit-by-bit over multiple cycles.
+
+Internally, each round is executed over 32 clock cycles (`ctr_bit` from 0 to 31). At each bit step, the core computes one new bit from the SIMON round function using rotations, bitwise AND/XOR logic, and the current round-key bit.
+
+Round keys are generated from the 128-bit key window. The key-schedule constant is C = 0xFFFF_FFFC (2^32-4 for n=32), and the schedule combines C, one z-sequence bit, and rotated/XOR-mixed key words to form the next key word.
+
+The z-sequence (z3 for SIMON64/128) is generated using a 7-bit LFSR, which supports updating both backwards and forwards so that the key schedule can run in either direction.
+
+A warmup phase is used to (re-)align the key schedule direction and state between encryption and decryption operations.
 
 Both encryption and decryption take 1410 clock cycles to complete without warmup, or 1453 clock cycles with warmup.
+
+The cryptographic implementation matches the behavior of the [simonspeckciphers](https://pypi.org/project/simonspeckciphers/) Python library, which is also verified as part of the automated tests.
 
 ## How to Test
 
