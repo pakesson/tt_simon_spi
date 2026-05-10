@@ -26,11 +26,14 @@ module tb ();
   reg spi_sck;
   reg spi_mosi;
   reg spi_cs_n;
-  assign ui_in[0] = spi_sck;
-  assign ui_in[1] = spi_mosi;
-  assign ui_in[2] = spi_cs_n;
+  assign ui_in = 8'h00;
+  assign uio_in[0] = spi_cs_n;
+  assign uio_in[1] = spi_sck;
+  assign uio_in[2] = spi_mosi;
+  assign uio_in[3] = 1'b0;
+  assign uio_in[7:4] = 4'h0;
 
-  wire spi_miso = uo_out[0];
+  wire spi_miso = uio_out[3];
 
   tt_um_pakesson_simon64_128 user_project (
 // Include power ports for the Gate Level test:

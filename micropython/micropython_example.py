@@ -53,17 +53,17 @@ def decrypt(spi, ciphertext, key):
     return spi_read_block64(spi)
 
 # Initialize SPI
-spi_miso = tt.pins.pin_uo_out0
-spi_cs = tt.pins.pin_ui_in2
-spi_clk = tt.pins.pin_ui_in0
-spi_mosi = tt.pins.pin_ui_in1
+spi_cs = tt.pins.pin_uio0
+spi_clk = tt.pins.pin_uio1
+spi_mosi = tt.pins.pin_uio2
+spi_miso = tt.pins.pin_uio3
 
 spi_miso.init(spi_miso.IN, spi_miso.PULL_DOWN)
 spi_cs.init(spi_cs.OUT)
 spi_clk.init(spi_clk.OUT)
 spi_mosi.init(spi_mosi.OUT)
 
-spi = machine.SoftSPI(baudrate=10000, polarity=0, phase=0, bits=8, firstbit=machine.SPI.MSB, sck=spi_clk, mosi=spi_mosi, miso=spi_miso)
+spi = machine.SPI(1, baudrate=10000, polarity=0, phase=0, bits=8, firstbit=machine.SPI.MSB, sck=spi_clk, mosi=spi_mosi, miso=spi_miso)
 
 spi_cs(1) # Initial value for CS
 

@@ -30,9 +30,9 @@ module tt_um_pakesson_simon64_128 (
   localparam [1:0] PL_KEY   = 2'd1;
   localparam [1:0] PL_BLOCK = 2'd2;
 
-  wire spi_sck  = ui_in[0];
-  wire spi_mosi = ui_in[1];
-  wire spi_cs_n = ui_in[2];
+  wire spi_cs_n = uio_in[0];
+  wire spi_sck  = uio_in[1];
+  wire spi_mosi = uio_in[2];
 
   wire        spi_cmd_valid;
   wire        spi_rx_byte_valid;
@@ -81,7 +81,7 @@ module tt_um_pakesson_simon64_128 (
       .block_out(core_block_out)
   );
 
-  assign uo_out[0] = spi_miso;
+  assign uo_out[0] = 1'b0;
   assign uo_out[1] = core_busy;
   assign uo_out[2] = out_valid;
   assign uo_out[3] = 1'b0;
@@ -90,8 +90,23 @@ module tt_um_pakesson_simon64_128 (
   assign uo_out[6] = 1'b0;
   assign uo_out[7] = 1'b0;
 
-  assign uio_out = 8'h00;
-  assign uio_oe  = 8'h00;
+  assign uio_out[0] = 1'b0;
+  assign uio_out[1] = 1'b0;
+  assign uio_out[2] = 1'b0;
+  assign uio_out[3] = spi_miso;
+  assign uio_out[4] = 1'b0;
+  assign uio_out[5] = 1'b0;
+  assign uio_out[6] = 1'b0;
+  assign uio_out[7] = 1'b0;
+
+  assign uio_oe[0] = 1'b0;
+  assign uio_oe[1] = 1'b0;
+  assign uio_oe[2] = 1'b0;
+  assign uio_oe[3] = 1'b1;
+  assign uio_oe[4] = 1'b0;
+  assign uio_oe[5] = 1'b0;
+  assign uio_oe[6] = 1'b0;
+  assign uio_oe[7] = 1'b0;
 
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
