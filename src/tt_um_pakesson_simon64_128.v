@@ -178,7 +178,7 @@ module tt_um_pakesson_simon64_128 (
           end
 
           CMD_READ_STATUS: begin
-            spi_tx_byte      <= {5'b00000, out_valid, core_busy, 1'b0};
+            spi_tx_byte      <= {5'b00000, out_valid, core_busy, 1'b1};
             spi_tx_byte_load <= 1'b1;
           end
 

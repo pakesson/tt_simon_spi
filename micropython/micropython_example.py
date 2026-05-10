@@ -29,8 +29,10 @@ def spi_read_block64(spi):
 
 def wait_spi_done(spi, max_polls=1000):
     for _ in range(max_polls):
-        status = spi_read_status(spi)
-        if ((int.from_bytes(status, 'big') >> 2) & 0x1):
+        status = spi_read_status(spi)[0]
+        if status & 0x1 == 0: # The low bit should always be 1
+            return False
+        if ((status >> 2) & 0x1):
             return True
     return False
 

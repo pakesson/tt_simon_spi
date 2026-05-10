@@ -82,12 +82,14 @@ async def spi_write_partial_payload(dut, cmd, payload_prefix):
 async def wait_spi_status_bit(dut, bit_index, expected, polls=256):
     for _ in range(polls):
         status = await spi_read_status(dut)
+        assert (status & 0x1) == 1
         if ((status >> bit_index) & 0x1) == expected:
             return status
     assert False, f"Status bit {bit_index} did not become {expected}"
 
 async def wait_spi_done(dut, polls=4096):
     status = await wait_spi_status_bit(dut, bit_index=2, expected=1, polls=polls)
+    assert (status & 0x1) == 1
     assert ((status >> 1) & 0x1) == 0 # Ensure core_busy == 0
     return status
 
@@ -122,6 +124,24 @@ async def test_known_answer_vector_reference_and_library(dut):
 
 
 @cocotb.test()
+async def test_spi_status_low_bit_always_one(dut):
+    clock = Clock(dut.clk, 1, unit="us")
+    cocotb.start_soon(clock.start())
+    dut.ena.value = 1
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 10)
+    await _spi_idle(dut)
+
+    for _ in range(3):
+        status = await spi_read_status(dut)
+        assert (status & 0x1) == 1
+
+
+@cocotb.test()
 async def test_spi_status_read_and_block_read_path(dut):
     clock = Clock(dut.clk, 1, unit="us")
     cocotb.start_soon(clock.start())
@@ -135,6 +155,7 @@ async def test_spi_status_read_and_block_read_path(dut):
     await _spi_idle(dut)
 
     status0 = await spi_read_status(dut)
+    assert (status0 & 0x1) == 1
     assert ((status0 >> 2) & 0x1) == 0
     assert ((status0 >> 1) & 0x1) == 0
 
@@ -244,6 +265,7 @@ async def test_spi_status_transitions_for_encrypt_then_decrypt(dut):
     expected_ct = bytes.fromhex("44c8fc20b9dfa07a")
 
     status0 = await spi_read_status(dut)
+    assert (status0 & 0x1) == 1
     assert ((status0 >> 2) & 0x1) == 0
     assert ((status0 >> 1) & 0x1) == 0
 
@@ -345,11 +367,13 @@ async def test_block_write_clears_out_valid_and_blocks_result_read(dut):
     await wait_spi_done(dut)
 
     status_done = await spi_read_status(dut)
+    assert (status_done & 0x1) == 1
     assert ((status_done >> 2) & 0x1) == 1
 
     await spi_write_cmd_and_payload(dut, CMD_WRITE_BLOCK_64, next_block)
 
     status_after_block_write = await spi_read_status(dut)
+    assert (status_after_block_write & 0x1) == 1
     assert ((status_after_block_write >> 2) & 0x1) == 0
 
     out_spi = await spi_read_block64(dut)
