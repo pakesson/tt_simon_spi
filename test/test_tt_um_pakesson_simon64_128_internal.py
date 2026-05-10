@@ -11,6 +11,12 @@ CMD_START_DECRYPT = 0x31
 CMD_READ_BLOCK_64 = 0x40
 CMD_READ_STATUS = 0x50
 
+CORE_CYCLES_ROUND_WORK = 44 * 32
+CORE_CYCLES_WARMUP = 43
+CORE_CYCLES_CONTROL_OVERHEAD = 2
+CORE_CYCLES_RUN_ONLY = CORE_CYCLES_ROUND_WORK + CORE_CYCLES_CONTROL_OVERHEAD
+CORE_CYCLES_WITH_WARMUP = CORE_CYCLES_ROUND_WORK + CORE_CYCLES_WARMUP + CORE_CYCLES_CONTROL_OVERHEAD
+
 async def _spi_idle(dut):
     dut.spi_cs_n.value = 1
     dut.spi_sck.value = 0
@@ -65,6 +71,24 @@ async def wait_done(dut, timeout=1000000):
     assert False, "core timeout"
 
 
+async def start_core_and_count_cycles(dut, decrypt, timeout=100000):
+    dut.user_project.core_decrypt_pipe.value = int(bool(decrypt))
+    dut.user_project.core_start_pipe.value = 1
+
+    cycles = 0
+    for _ in range(timeout):
+        await ClockCycles(dut.clk, 1)
+        cycles += 1
+
+        if cycles == 1:
+            dut.user_project.core_start_pipe.value = 0
+
+        if int(dut.user_project.core_done.value) == 1:
+            return cycles
+
+    assert False, "core timeout while counting cycles"
+
+
 async def run_core_encrypt_smoke(dut):
     key = bytes.fromhex("1b1a1918131211100b0a090803020100")
     plain = bytes.fromhex("656b696c20646e75")
@@ -80,6 +104,15 @@ async def run_core_encrypt_smoke(dut):
     await wait_done(dut)
     out = int(dut.user_project.core.block_out.value).to_bytes(8, "big")
     assert out == simon_encrypt_ref(key, plain)
+
+
+async def init_core_smoke_state(dut):
+    key = bytes.fromhex("1b1a1918131211100b0a090803020100")
+    plain = bytes.fromhex("656b696c20646e75")
+    dut.user_project.core.k_window.value = int.from_bytes(key, "big")
+    dut.user_project.core.z_lfsr.value = 0x5B
+    dut.user_project.core.x_reg.value = int.from_bytes(plain[:4], "big")
+    dut.user_project.core.y_reg.value = int.from_bytes(plain[4:], "big")
 
 
 @cocotb.test()
@@ -119,3 +152,49 @@ async def test_spi_write_paths_and_core_smoke(dut):
     assert int(dut.user_project.core.block_out.value) == int.from_bytes(plain, "big")
 
     await run_core_encrypt_smoke(dut)
+
+
+@cocotb.test()
+async def test_core_cycle_count_without_warmup(dut):
+    clock = Clock(dut.clk, 1, unit="us")
+    cocotb.start_soon(clock.start())
+    dut.ena.value = 1
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 10)
+
+    await init_core_smoke_state(dut)
+    dut.user_project.core.k_at_final.value = 0
+    encrypt_cycles = await start_core_and_count_cycles(dut, decrypt=0)
+    assert encrypt_cycles == CORE_CYCLES_RUN_ONLY
+
+    await init_core_smoke_state(dut)
+    dut.user_project.core.k_at_final.value = 1
+    decrypt_cycles = await start_core_and_count_cycles(dut, decrypt=1)
+    assert decrypt_cycles == CORE_CYCLES_RUN_ONLY
+
+
+@cocotb.test()
+async def test_core_cycle_count_with_warmup(dut):
+    clock = Clock(dut.clk, 1, unit="us")
+    cocotb.start_soon(clock.start())
+    dut.ena.value = 1
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 10)
+
+    await init_core_smoke_state(dut)
+    dut.user_project.core.k_at_final.value = 1
+    encrypt_cycles = await start_core_and_count_cycles(dut, decrypt=0)
+    assert encrypt_cycles == CORE_CYCLES_WITH_WARMUP
+
+    await init_core_smoke_state(dut)
+    dut.user_project.core.k_at_final.value = 0
+    decrypt_cycles = await start_core_and_count_cycles(dut, decrypt=1)
+    assert decrypt_cycles == CORE_CYCLES_WITH_WARMUP
