@@ -17,13 +17,32 @@ The ASIC implementation also includes some art of a secure chip, on metal layers
 
 ![GDS render](gds_3d_viewer.png)
 
+## Hardware Interface
+
+The SIMON64/128 crypto module can be used through the RP2350 microcontroller on the demo board, or by connecting an external microcontroller or SPI adapter to the SPI pins.
+
+| Pin    | Signal       |
+|--------|--------------|
+| `uio[0]`| SPI CS_N    |
+| `uio[1]`| SPI SCK     |
+| `uio[2]`| SPI MOSI    |
+| `uio[3]`| SPI MISO    |
+
+SPI mode 0 is used, with clock polarity 0 and clock phase 0. Data is sampled (from MOSI) on rising clock edges, and shifted out (on MISO) on falling clock edges.
+Chip select is active low.
+
+An SPI clock frequency of up to 6 MHz seems to work fine when testing on an FPGA. Results may vary on the actual ASIC.
+
+## SPI Protocol
+
+TODO: Three types of commands: Write data, read data or no data.
+TODO: Data is sent in big-endian format, with the MSB first.
+
 ## How It Works
 
 TODO: The cryptographic implementation matches the behavior of the [simonspeckciphers](https://pypi.org/project/simonspeckciphers/) Python library, which is also verified as part of the automated tests.
 
-## Hardware Interface
-
-The SIMON64/128 crypto module can be used through the RP2350 microcontroller on the demo board, or optionally by connecting an external microcontroller to the SPI pins.
+Both encryption and decryption take 1410 clock cycles to complete without warmup, or 1453 clock cycles with warmup.
 
 ## How to Test
 
@@ -105,7 +124,7 @@ spi_cs.init(spi_cs.OUT)
 spi_clk.init(spi_clk.OUT)
 spi_mosi.init(spi_mosi.OUT)
 
-spi = machine.SPI(1, baudrate=10000, polarity=0, phase=0, bits=8, firstbit=machine.SPI.MSB, sck=spi_clk, mosi=spi_mosi, miso=spi_miso)
+spi = machine.SPI(1, baudrate=6000000, polarity=0, phase=0, bits=8, firstbit=machine.SPI.MSB, sck=spi_clk, mosi=spi_mosi, miso=spi_miso)
 
 spi_cs(1) # Initial value for CS
 ```
