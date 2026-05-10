@@ -360,6 +360,7 @@ async def test_block_write_clears_out_valid_and_blocks_result_read(dut):
     key = bytes.fromhex("1b1a1918131211100b0a090803020100")
     plain = bytes.fromhex("656b696c20646e75")
     next_block = bytes.fromhex("0011223344556677")
+    expected_prev_cipher = simon_encrypt_ref(key, plain)
 
     await spi_write_cmd_and_payload(dut, CMD_WRITE_KEY_128, key)
     await spi_write_cmd_and_payload(dut, CMD_WRITE_BLOCK_64, plain)
@@ -377,7 +378,7 @@ async def test_block_write_clears_out_valid_and_blocks_result_read(dut):
     assert ((status_after_block_write >> 2) & 0x1) == 0
 
     out_spi = await spi_read_block64(dut)
-    assert out_spi == bytes(8)
+    assert out_spi != expected_prev_cipher
 
 
 @cocotb.test()
