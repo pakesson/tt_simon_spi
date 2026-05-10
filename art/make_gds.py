@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2024 Uri Shaked
+# SPDX-FileCopyrightText: 2026 Philip Åkesson
 
 import gdspy
 import sys
