@@ -83,9 +83,14 @@ Both encryption and decryption take 1410 clock cycles to complete without warmup
 
 ## How to Test
 
+Automated tests using [cocotb](https://www.cocotb.org/) and [pytest](https://docs.pytest.org/en/stable/) can be found under `test/`.
+
 **WORK IN PROGRESS**
 
-![Photo showing the FPGA demo board connected to the Tigard FT2232H breakout board](fpga_tigard_photo.png)
+The easiest way to use this project is by through MicroPython on the Tiny Tapeout demo board.
+
+After the MicroPython examples below, this section also shows how to use an external FTDI breakout board to communicate through the bidirectional Pmod header from Python scripts running on a PC.
+Other external devices, such as microcontrollers or other SPI adapters, can be used in the same way.
 
 ### Using with MicroPython on the TT Demo Board
 
@@ -180,6 +185,48 @@ assert ct == expected_ct, "Encryption failed"
 pt = decrypt(spi, ct, key)
 print("Decrypted plaintext:", pt.hex())
 assert pt == plain, "Decryption failed"
+```
+
+### External SPI Using an FTDI Breakout Board
+
+Before using SPI externally through the bidirectional Pmod header, ensure that the corresponding pins on the RP2350 on the demo board are set as inputs (without pull-downs or pull-ups).
+
+Example code using the [PyFtdi](https://eblot.github.io/pyftdi/) Python library can be found in `python/pyftdi_example.py`.
+
+All examples have been tested with the [Tigard](https://github.com/tigard-tools/tigard) FT2232H breakout board:
+
+![Photo showing the FPGA demo board connected to the Tigard FT2232H breakout board](fpga_tigard_photo.png)
+
+```sh
+$ uv run pyftdi_example.py
+usage: pyftdi_example.py [-h] [--list-devices] [--device DEVICE] [--encrypt | --decrypt] [--key KEY] [--data DATA]
+pyftdi_example.py: error: Specify one operation: --encrypt or --decrypt
+```
+
+Use `--list-devices` to find your device configuration:
+```
+$ uv run pyftdi_example.py --list-devices
+Available interfaces:
+  ftdi://ftdi:2232:TG11163f/1  (Tigard V1.1)
+  ftdi://ftdi:2232:TG11163f/2  (Tigard V1.1)
+```
+The example code uses the FT2232H's second interface by default, but you can configure and use any compatible FTDI device by setting `--device DEVICE`.
+If only one FTDI device is connected, you can also use just `ftdi:///1` for the first interface, `ftdi:///2` for the second and so on.
+
+Set the key with `--key` and data (plaintext or ciphertext) with `--data`, and then use `--encrypt` or `--decrypt` to encrypt or decrypt data, respectively:
+```sh
+$ uv run pyftdi_example.py --encrypt --key 1b1a1918131211100b0a090803020100 --data 656b696c20646e75
+Ciphertext: 44c8fc20b9dfa07a
+
+$ uv run pyftdi_example.py --decrypt --key 1b1a1918131211100b0a090803020100 --data 44c8fc20b9dfa07a
+Plaintext: 656b696c20646e75
+```
+
+Use a specific FTDI device like this:
+```sh
+$ uv run pyftdi_example.py --decrypt --device ftdi://ftdi:2232:TG11163f/2 --key 1b1a1918131211100b0a090803
+020100 --data 44c8fc20b9dfa07a
+Plaintext: 656b696c20646e75
 ```
 
 ## References
