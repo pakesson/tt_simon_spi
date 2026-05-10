@@ -21,12 +21,12 @@ The ASIC implementation also includes some art of a secure chip, on metal layers
 
 The SIMON64/128 crypto module can be used through the RP2350 microcontroller on the demo board, or by connecting an external microcontroller or SPI adapter to the SPI pins.
 
-| Pin    | Signal       |
-|--------|--------------|
-| `uio[0]`| SPI CS_N    |
-| `uio[1]`| SPI SCK     |
-| `uio[2]`| SPI MOSI    |
-| `uio[3]`| SPI MISO    |
+| Pin     | Signal       |
+|---------|--------------|
+| `uio[0]`| SPI CS_N     |
+| `uio[1]`| SPI SCK      |
+| `uio[2]`| SPI MOSI     |
+| `uio[3]`| SPI MISO     |
 
 SPI mode 0 is used, with clock polarity 0 and clock phase 0. Data is sampled (from MOSI) on rising clock edges, and shifted out (on MISO) on falling clock edges.
 Chip select is active low.
@@ -35,8 +35,45 @@ An SPI clock frequency of up to 6 MHz seems to work fine when testing on an FPGA
 
 ## SPI Protocol
 
-TODO: Three types of commands: Write data, read data or no data.
-TODO: Data is sent in big-endian format, with the MSB first.
+All SPI transfers are framed by `CS_N`.
+The first byte in each SPI frame is always a command byte.
+
+Data format:
+- Multi-byte values are big-endian.
+- Bits are shifted MSB-first.
+- Key size is 16 bytes (128 bits).
+- Block size is 8 bytes (64 bits).
+
+### Commands
+
+| Command | Value | MOSI data (after command) | MISO data (after command) |
+|---------|-------|-----------------------------|--------------------|
+| `CMD_WRITE_KEY_128` | `0x10` | 16 key bytes | - |
+| `CMD_WRITE_BLOCK_64` | `0x20` | 8 data bytes (plaintext or ciphertext) | - |
+| `CMD_START_ENCRYPT` | `0x30` | - | - |
+| `CMD_START_DECRYPT` | `0x31` | - | - |
+| `CMD_READ_BLOCK_64` | `0x40` | - | 8 data bytes (plaintext or ciphertext) |
+| `CMD_READ_STATUS` | `0x50` | - | 1-byte status |
+
+### Status Byte (`CMD_READ_STATUS`)
+
+Status bit layout:
+- bits 7:3: unused, currently set to `0`
+- bit 2: `out_valid` (1 when output block is ready)
+- bit 1: `core_busy` (1 while encryption/decryption is running)
+- bit 0: always `1`
+
+### Typical transaction sequence
+
+1. Send `CMD_WRITE_KEY_128` with 16 key bytes.
+2. Send `CMD_WRITE_BLOCK_64` with 8 plaintext/ciphertext bytes.
+3. Send `CMD_START_ENCRYPT` or `CMD_START_DECRYPT`.
+4. Poll `CMD_READ_STATUS` until bit 2 (`out_valid`) becomes `1`.
+5. Send `CMD_READ_BLOCK_64` and clock out 8 bytes of result.
+
+Notes:
+- Writing a new block (`CMD_WRITE_BLOCK_64`) clears `out_valid`.
+- If `CMD_READ_BLOCK_64` is issued when `out_valid=0`, output data is not valid.
 
 ## How It Works
 
@@ -53,6 +90,8 @@ Both encryption and decryption take 1410 clock cycles to complete without warmup
 ### Using with MicroPython on the TT Demo Board
 
 The Tiny Tapeout demo board includes an RP2350 running MicroPython, which can be used to test this project.
+
+The full code below can also be found in `micropython/micropython_example.py`.
 
 First, set up some utility functions:
 ```python
