@@ -65,7 +65,7 @@ spi_cs.init(spi_cs.OUT)
 spi_clk.init(spi_clk.OUT)
 spi_mosi.init(spi_mosi.OUT)
 
-spi = machine.SPI(1, baudrate=10000, polarity=0, phase=0, bits=8, firstbit=machine.SPI.MSB, sck=spi_clk, mosi=spi_mosi, miso=spi_miso)
+spi = machine.SPI(1, baudrate=6000000, polarity=0, phase=0, bits=8, firstbit=machine.SPI.MSB, sck=spi_clk, mosi=spi_mosi, miso=spi_miso)
 
 spi_cs(1) # Initial value for CS
 
