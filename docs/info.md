@@ -14,7 +14,7 @@ This is a Tiny Tapeout ASIC project implementing the SIMON64/128 lightweight blo
 SIMON is a family of lightweight block ciphers published by the NSA in 2013, designed for efficient hardware implementation. Its sister family, SPECK, similarly targets software efficiency.
 This project implements SIMON64/128, which is a variant of SIMON using 64-bit blocks and 128-bit keys.
 
-This project has not been hardened against side-channels or other cryptographic attacks. That could potentially be an interesting follow-up project.
+This project has not been hardened against side-channels or other cryptographic attacks.
 
 The ASIC implementation also includes an image illustrating a secure chip, on metal layers 1 and 2, shown in this 3D render:
 
