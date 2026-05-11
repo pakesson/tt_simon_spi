@@ -81,10 +81,32 @@ module tt_um_pakesson_simon64_128 (
       .block_out(core_block_out)
   );
 
-  assign uo_out = {1'b0, core_busy, out_valid, 5'b00000};
+  assign uo_out[0] = 1'b0;
+  assign uo_out[1] = core_busy;
+  assign uo_out[2] = out_valid;
+  assign uo_out[3] = 1'b0;
+  assign uo_out[4] = 1'b0;
+  assign uo_out[5] = 1'b0;
+  assign uo_out[6] = 1'b0;
+  assign uo_out[7] = 1'b0;
 
-  assign uio_out = {4'b0000, spi_miso, 3'b000};
-  assign uio_oe = 8'b00001000; // Only drive uio_out[3] (spi_miso)
+  assign uio_out[0] = 1'b0;
+  assign uio_out[1] = 1'b0;
+  assign uio_out[2] = 1'b0;
+  assign uio_out[3] = spi_miso;
+  assign uio_out[4] = 1'b0;
+  assign uio_out[5] = 1'b0;
+  assign uio_out[6] = 1'b0;
+  assign uio_out[7] = 1'b0;
+
+  assign uio_oe[0] = 1'b0;
+  assign uio_oe[1] = 1'b0;
+  assign uio_oe[2] = 1'b0;
+  assign uio_oe[3] = 1'b1;
+  assign uio_oe[4] = 1'b0;
+  assign uio_oe[5] = 1'b0;
+  assign uio_oe[6] = 1'b0;
+  assign uio_oe[7] = 1'b0;
 
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
