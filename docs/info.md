@@ -16,7 +16,7 @@ This project implements SIMON64/128, which is a variant of SIMON using 64-bit bl
 
 This project has not been hardened against side-channels or other cryptographic attacks. That could potentially be an interesting follow-up project.
 
-The ASIC implementation also includes an image illustrating a secure chip, on metal layers 1 and 2, as can be seen in this 3D render:
+The ASIC implementation also includes an image illustrating a secure chip, on metal layers 1 and 2, shown in this 3D render:
 
 ![GDS render](gds_3d_viewer.png)
 
@@ -81,7 +81,7 @@ Notes:
 ## How It Works
 
 ### Overview
-SIMON supports multiple variants and parameter sets based on word size (n), which determines the overall block size (2n). The key size is a multiple of n by m=2, 3 or 4.
+SIMON supports multiple variants and parameter sets based on word size (n), which determines the overall block size (2n). The key size is `m*n` bits, where `m` is 2, 3, or 4.
 
 SIMON64/128 uses 32-bit words (`n=32`), 64-bit blocks (`2n=64`), and a 128-bit key (`m=4`) with 44 rounds.
 
@@ -93,6 +93,9 @@ The project consists of three main Verilog modules: an SPI peripheral that handl
 The full key and block are loaded as bytes over SPI and stored in a 128-bit key window register `k_window` and 64-bit block state (split into `x_reg` and `y_reg`). Round processing is then performed iteratively, bit-by-bit over multiple cycles, to reduce area.
 
 ### Implementation Details
+This section covers parts of the SIMON cipher together with notes on the implementation in this project.
+For full details on the inner workings of SIMON, see the References section further down.
+
 The round function is as follows:
 ```
 R(x, y) = (y ^ F(x) ^ k_i, x)
@@ -106,7 +109,7 @@ The inverse round function is used for decryption:
 ```
 R_inv(x, y) = (y, x ^ F(y) ^ k_i)
 ```
-In the code, encryption/decryption are selected by mode and key-schedule direction/state.
+In the code, there is a shared datapath for encryption/decryption, selected by the `op_decrypt` control bit and key-schedule direction/state.
 
 Round keys are generated from the 128-bit key window. The key-schedule constant is `c = 0xFFFF_FFFC` (`2^32-4` for n=32), and the schedule combines c, one z-sequence bit, and rotated/XOR-mixed key words to form the next key word.
 
@@ -143,7 +146,7 @@ The cryptographic implementation matches the behavior of the [simonspeckciphers]
 
 Automated tests using [cocotb](https://www.cocotb.org/) and [pytest](https://docs.pytest.org/en/stable/) can be found under `test/`.
 
-The easiest way to use this project is by through MicroPython on the Tiny Tapeout demo board.
+The easiest way to use this project is through MicroPython on the Tiny Tapeout demo board.
 
 After the MicroPython examples below, this section also shows how to use an external FTDI breakout board to communicate through the bidirectional Pmod header from Python scripts running on a PC.
 Other external devices, such as microcontrollers or other SPI adapters, can be used in the same way.
@@ -212,7 +215,7 @@ def decrypt(spi, ciphertext, key):
     return spi_read_block64(spi)
 ```
 
-Secondly, initialize SPI:
+Next, initialize SPI:
 ```python
 spi_cs = tt.pins.pin_uio0
 spi_clk = tt.pins.pin_uio1
@@ -288,7 +291,7 @@ Plaintext: 656b696c20646e75
 
 ## References
 
-A bitserial implementation of SIMON128 has previously been taped out on [Tiny Tapeout 8](https://tinytapeout.com/chips/tt08/tt_um_simon_cipher) and [IHP 25a](https://tinytapeout.com/chips/ttihp25a/tt_um_simon_cipher), by [Secure-Embedded-Systems](https://github.com/Secure-Embedded-Systems/tt08-simon). That implementation has a fixed hardcoded (all zero) key and uses a custom 3-bit input and 2-bit output interface, but it also fits in only one Tiny Tapeout tile (instead of two, like this project).
+A bit-serial implementation of SIMON128 has previously been taped out on [Tiny Tapeout 8](https://tinytapeout.com/chips/tt08/tt_um_simon_cipher) and [IHP 25a](https://tinytapeout.com/chips/ttihp25a/tt_um_simon_cipher), by [Secure-Embedded-Systems](https://github.com/Secure-Embedded-Systems/tt08-simon). That implementation has a fixed hard-coded (all zero) key and uses a custom 3-bit input and 2-bit output interface, but it also fits in only one Tiny Tapeout tile (instead of two, like this project).
 
 The [simonspeckciphers](https://pypi.org/project/simonspeckciphers/) Python library was used as a reference, and is also included in the cocotb tests for this project.
 
