@@ -80,22 +80,58 @@ Notes:
 
 ## How It Works
 
+### Overview
 SIMON supports multiple variants and parameter sets based on word size (n), which determines the overall block size (2n). The key size is a multiple of n by m=2, 3 or 4.
 
-SIMON64/128 uses 32-bit words (n=32), 64-bit blocks (2n=64), and a 128-bit key (m=4) with 44 rounds.
+SIMON64/128 uses 32-bit words (`n=32`), 64-bit blocks (`2n=64`), and a 128-bit key (`m=4`) with 44 rounds.
 
-SIMON is a balanced Feistel cipher, meaning (for SIMON64/128) the 64-bit block is split into two 32-bit halves, and each round updates one half using a nonlinear function of the other half plus a round key.
+SIMON is a balanced Feistel cipher, where (for SIMON64/128) the 64-bit block is split into two 32-bit halves, and each round updates one half using a nonlinear function of the other half plus a round key.
 The round function consists of bitwise operations and rotations (no S-boxes), which is helpful when implementing in limited area in hardware.
 
 The project consists of three main Verilog modules: an SPI peripheral that handles communication with an external microcontroller, a SIMON64/128 cryptographic core that performs encryption and decryption, and a top-level wrapper that integrates them.
 
-The full key and block are loaded as bytes over SPI and stored in a 128-bit key window register (`k_window`) and 64-bit block state (split into `x_reg` and `y_reg`), but round processing itself is performed bit-by-bit over multiple cycles.
+The full key and block are loaded as bytes over SPI and stored in a 128-bit key window register `k_window` and 64-bit block state (split into `x_reg` and `y_reg`). Round processing is then performed iteratively, bit-by-bit over multiple cycles, to reduce area.
 
-Internally, each round is executed over 32 clock cycles (`ctr_bit` from 0 to 31). At each bit step, the core computes one new bit from the SIMON round function using rotations, bitwise AND/XOR logic, and the current round-key bit.
+### Implementation Details
+The round function is as follows:
+```
+R(x, y) = (y ^ F(x) ^ k_i, x)
+```
+where
+```
+F(x) = (ROL(x, 1) & ROL(x, 8)) ^ ROL(x, 2)
+```
+and `k_i` is the key-word for round `i`, `ROL(x, n)` is left-rotation (circular shift) of the word `x` by `n` bits.
+The inverse round function is used for decryption:
+```
+R_inv(x, y) = (y, x ^ F(y) ^ k_i)
+```
+In the code, encryption/decryption are selected by mode and key-schedule direction/state.
 
-Round keys are generated from the 128-bit key window. The key-schedule constant is C = 0xFFFF_FFFC (2^32-4 for n=32), and the schedule combines C, one z-sequence bit, and rotated/XOR-mixed key words to form the next key word.
+Round keys are generated from the 128-bit key window. The key-schedule constant is `c = 0xFFFF_FFFC` (`2^32-4` for n=32), and the schedule combines c, one z-sequence bit, and rotated/XOR-mixed key words to form the next key word.
 
-The z-sequence (z3 for SIMON64/128) is generated using a 7-bit LFSR, which supports updating both backwards and forwards so that the key schedule can run in either direction.
+For `m=4`, the key schedule is
+```
+k_{i+4} = C ^ z_i ^ k_i ^ ROR(k_{i+3}, 3) ^ k_{i+1} ^ ROR(ROR(k_{i+3}, 3) ^ k_{i+1}, 1)
+```
+where `ROR(x, n)` is right-rotation (circular shift) of the word `x` by `n` bits.
+
+In the code, the key window is
+```
+k_window = {kw3, kw2, kw1, kw0}
+```
+
+The 62-bit z-sequence (z3 for SIMON64/128) is generated using an LFSR with a 7-bit state (with `P(x) = x^7 + x^4 + x + 1`), which supports updating both backwards and forwards so that the key schedule can run in either direction.
+Forward updates are
+```
+z_lfsr_fwd = {z_lfsr[4] ^ z_lfsr[1] ^ z_lfsr[0], z_lfsr[6:1]}
+```
+and backward updates
+```
+z_lfsr_bwd = {z_lfsr[5:0], z_lfsr[6] ^ z_lfsr[3] ^ z_lfsr[0]}
+```
+
+Internally, each round is executed over 32 clock cycles (`ctr_bit` from 0 to 31). At each bit step, the core computes one new bit from the SIMON round function and the current round-key bit `rk_bit = kw0[ctr_bit]`.
 
 A warmup phase is used to (re-)align the key schedule direction and state between encryption and decryption operations.
 
