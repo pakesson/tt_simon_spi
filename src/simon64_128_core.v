@@ -42,8 +42,8 @@ module simon64_128_core (
 
   wire        z_bit      = z_lfsr[0];
   wire        z_bit_inv  = z_lfsr[6] ^ z_lfsr[3] ^ z_lfsr[0];
-  wire [6:0]  z_lfsr_fwd = {z_lfsr[4]^z_lfsr[1]^z_lfsr[0], z_lfsr[6:1]};
-  wire [6:0]  z_lfsr_bwd = {z_lfsr[5:0], z_lfsr[6]^z_lfsr[3]^z_lfsr[0]};
+  wire [6:0]  z_lfsr_fwd = {z_lfsr[4] ^ z_lfsr[1] ^ z_lfsr[0], z_lfsr[6:1]};
+  wire [6:0]  z_lfsr_bwd = {z_lfsr[5:0], z_lfsr[6] ^ z_lfsr[3] ^ z_lfsr[0]};
 
   wire         ks_forward = (phase == ST_WARMUP) ? op_decrypt : !op_decrypt;
   wire [31:0]  ks_rot_src = ks_forward ? kw3 : kw2;
